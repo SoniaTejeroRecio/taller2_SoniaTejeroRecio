@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.individual_soniatejerorecio"
+    namespace = "com.example.individual"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.individual_soniatejerorecio"
+        applicationId = "com.example.individual"
         minSdk = 24
         targetSdk = 34
         versionCode = 1
