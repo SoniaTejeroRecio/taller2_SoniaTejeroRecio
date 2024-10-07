@@ -13,18 +13,18 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.individual.ui.theme.IndividualTheme
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : ComponentActivity() {
@@ -41,7 +41,9 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun MainScreen() {
     var userName by remember { mutableStateOf("") }
-    var savedNames by remember { mutableStateOf(listOf<String>()) }
+    var savedName by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0) }
     var buttonColor by remember { mutableStateOf(Color.Blue) }
     var showDialog by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -69,7 +71,7 @@ fun MainScreen() {
                 .fillMaxSize()
                 .padding(16.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally // Cambiado a CenterHorizontally
         ) {
             Column(
                 modifier = Modifier
@@ -93,7 +95,7 @@ fun MainScreen() {
                 Button(
                     onClick = {
                         if (userName.isNotEmpty()) {
-                            savedNames = savedNames + userName
+                            savedName = userName // Guarda el nombre ingresado
                             userName = ""
                             buttonColor = Color.Red
                         }
@@ -104,7 +106,49 @@ fun MainScreen() {
                 ) {
                     Text("Guardar nombre", fontWeight = FontWeight.Bold)
                 }
+
+                // TextView que muestra el nombre guardado
+                Text(
+                    text = "Nombre guardado: $savedName",
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    modifier = Modifier.padding(top = 16.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Botón para iniciar tarea en segundo plano
+                Button(
+                    onClick = {
+                        isLoading = true
+                        progress = 0 // Reiniciar progreso
+
+                        GlobalScope.launch {
+                            for (i in 1..100) {
+                                Thread.sleep(50) // Simula tiempo de red
+                                progress = i // Actualiza el progreso en el hilo principal
+                            }
+                            isLoading = false // Termina el loading cuando el progreso es 100
+                        }
+                    },
+                    modifier = Modifier
+                        .border(2.dp, buttonColor, RoundedCornerShape(8.dp))
+                        .padding(4.dp)
+                ) {
+                    Text("Iniciar tarea en segundo plano", fontWeight = FontWeight.Bold)
+                }
+
+                // Mostrar ProgressBar
+                if (isLoading) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    LinearProgressIndicator(
+                        progress = progress / 100f,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(text = "Progreso: $progress%", fontSize = 20.sp, color = Color.Red)
+                }
             }
+
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = { showDialog = true },
@@ -135,13 +179,11 @@ fun MainScreen() {
             onDismissRequest = { showDialog = false },
             title = { Text("Usuarios guardados") },
             text = {
-                if (savedNames.isEmpty()) {
+                if (savedName.isEmpty()) {
                     Text("No se han introducido usuarios")
                 } else {
                     Column {
-                        savedNames.forEach { name ->
-                            Text(name)
-                        }
+                        Text(savedName) // Solo muestra el último nombre guardado
                     }
                 }
             },
